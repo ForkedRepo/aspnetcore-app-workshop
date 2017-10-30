@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  backend:
+    image: backend
+    build:
+        context: ./BackEnd
+        dockerfile: Dockerfile
+
+  back-loadbalancer:
+    image: dockercloud/haproxy
+    links:
+      - backend
+    ports:
+      - "56009:56009"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - backend
+
+
+  frontend:
+    image: frontend
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    links:
+      - back-loadbalancer
+    depends_on:
+      - back-loadbalancer
+
+  front-loadbalancer:
+    image: dockercloud/haproxy
+    links:
+      - frontend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "80:80"
+      - "1936:1936"
+    depends_on:
+      - frontend
+      - backend
